@@ -258,4 +258,6 @@ source "drivers/battery/fuelgauge/s2mu106_fuelgauge/Kconfig" # ADDED BY LEGO AUT
 source "drivers/battery/charger/s2mu106_charger/Kconfig" # ADDED BY LEGO AUTOMATICALLY: DO NOT SUBMIT
 source "drivers/battery/common/Kconfig" # ADDED BY LEGO AUTOMATICALLY: DO NOT SUBMIT
 source "drivers/mfd/sm/sm5714/Kconfig" # a12s PMIC (SM5714) MFD core
+source "drivers/battery/charger/sm5714_charger/Kconfig" # a12s charger
+source "drivers/battery/fuelgauge/sm5714_fuelgauge/Kconfig" # a12s fuel gauge
 endmenu
