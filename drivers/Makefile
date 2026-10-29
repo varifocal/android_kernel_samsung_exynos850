@@ -226,3 +226,4 @@ obj-y += muic/slsi/s2mu106/ # ADDED BY LEGO AUTOMATICALLY: DO NOT SUBMIT
 obj-y += battery/fuelgauge/s2mu106_fuelgauge/ # ADDED BY LEGO AUTOMATICALLY: DO NOT SUBMIT
 obj-y += battery/charger/s2mu106_charger/ # ADDED BY LEGO AUTOMATICALLY: DO NOT SUBMIT
 obj-y += battery/common/ # ADDED BY LEGO AUTOMATICALLY: DO NOT SUBMIT
+obj-y += mfd/sm/sm5714/ # a12s PMIC (SM5714) MFD core
