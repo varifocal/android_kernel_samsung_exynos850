@@ -1090,7 +1090,7 @@ static int nvt_parse_dt(struct device *dev)
 	struct device_node *np = dev->of_node;
 	int32_t ret = 0;
 	int tmp[3];
-	int lcd_id1_gpio = 0, lcd_id2_gpio = 0, dt_lcdtype;
+	int lcd_id1_gpio = 0, lcd_id2_gpio = 0, lcd_id3_gpio = 0, dt_lcdtype;
 	int fw_name_cnt;
 	int lcdtype_cnt;
 	int fw_sel_idx = 0;
@@ -1160,7 +1160,16 @@ static int nvt_parse_dt(struct device *dev)
 			input_err(true, dev, "%s: Failed to get novatek,lcdid2-gpio\n", __func__);
 			return -EINVAL;
 		}
-		fw_sel_idx = (gpio_get_value(lcd_id2_gpio) << 1) | gpio_get_value(lcd_id1_gpio);
+		/* support lcd id3 */
+		lcd_id3_gpio = of_get_named_gpio(np, "novatek,lcdid3-gpio", 0);
+		if (gpio_is_valid(lcd_id3_gpio)) {
+			input_info(true, dev, "%s: lcd id3_gpio %d(%d)\n", __func__, lcd_id3_gpio, gpio_get_value(lcd_id3_gpio));
+			fw_sel_idx = (gpio_get_value(lcd_id3_gpio) << 2) | (gpio_get_value(lcd_id2_gpio) << 1) | gpio_get_value(lcd_id1_gpio);
+
+		} else {
+			input_err(true, dev, "%s: Failed to get novatek,lcdid3-gpio and use #1 &#2 id\n", __func__);
+			fw_sel_idx = (gpio_get_value(lcd_id2_gpio) << 1) | gpio_get_value(lcd_id1_gpio);
+		}
 
 		lcdtype_cnt = of_property_count_u32_elems(np, "novatek,lcdtype");
 		input_info(true, dev, "%s: fw_name_cnt(%d) & lcdtype_cnt(%d) & fw_sel_idx(%d)\n",
