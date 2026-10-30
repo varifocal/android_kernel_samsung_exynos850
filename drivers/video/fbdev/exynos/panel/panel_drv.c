@@ -118,6 +118,7 @@ static char *panel_regulator_names[PANEL_REGULATOR_MAX] = {
 };
 
 int boot_panel_id;
+int boot_blic_type;
 int panel_log_level = 6;
 #ifdef CONFIG_SUPPORT_PANEL_SWAP
 int panel_reprobe(struct panel_device *panel);
@@ -3410,6 +3411,22 @@ static struct platform_driver panel_driver = {
 		.of_match_table = of_match_ptr(panel_drv_of_match_table),
 	}
 };
+
+int get_blic_type(void)
+{
+	return boot_blic_type;
+}
+
+static int __init get_boot_blic_type(char *arg)
+{
+	get_option(&arg, &boot_blic_type);
+	panel_info("PANEL:INFO:%s:boot_blic_type : 0x%x\n",
+			__func__, boot_blic_type);
+
+	return 0;
+}
+
+early_param("blic_type", get_boot_blic_type);
 
 static int __init get_boot_panel_id(char *arg)
 {

@@ -495,6 +495,7 @@ int panel_set_vrr(struct panel_device *panel, int fps, int mode);
 bool panel_gpio_valid(struct panel_gpio *gpio);
 void panel_send_ubconn_uevent(struct panel_device *panel);
 int panel_set_gpio_irq(struct panel_gpio *gpio, bool enable);
+int get_blic_type(void);
 
 #define PANEL_DRV_NAME "panel-drv"
 
