@@ -130,6 +130,29 @@ struct muic_irq_t {
 	int irq_chgtyp;
 	int irq_vbvolt;
 	int irq_dcdtmr;
+	/*
+	 * a12s SM5714 MUIC interrupts.
+	 *
+	 * The Samsung release defines its own struct muic_irq_t with these
+	 * members inside include/linux/muic/sm/sm5714/sm5714-muic.h, which is a
+	 * redefinition of the one here once both headers are included. The two
+	 * sets are disjoint (the fields above are the S2MU106-style ADC/CHGTYP
+	 * ones; these are SM5714's int1/int2 lines), so they are merged into the
+	 * single shared struct and the sm5714 copy of the definition is dropped.
+	 * Each driver only ever touches its own members.
+	 */
+	/* SM5714 int1 */
+	int irq_dpdm_ovp;
+	int irq_vbus_rid_detach;
+	int irq_rid_detect;
+	int irq_chgtype_attach;
+	int irq_dectimeout;
+	/* SM5714 int2 (AFC) */
+	int irq_afc_error;
+	int irq_afc_sta_chg;
+	int irq_multi_byte;
+	int irq_afc_accepted;
+	int irq_afc_ta_attached;
 };
 
 typedef union _muic_vps_t {

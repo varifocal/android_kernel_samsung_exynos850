@@ -290,6 +290,15 @@ struct muic_platform_data {
 	bool dcd_timeout;
 	int afc_disabled_updated;
 
+	/* a12s SM5714: current MUIC/PDIC arbitration mode.
+	 * Held as int (not enum muic_op_mode) because that enum already lives
+	 * in <linux/muic/common/muic_interface.h>, which includes *this* header
+	 * (muic_interface.h:23) - pulling it in from here would be a circular,
+	 * include-order-dependent dependency. Consumers that need the
+	 * OPMODE_* constants include muic_interface.h themselves; the values
+	 * (OPMODE_MUIC=0, OPMODE_PDIC=1) fit an int trivially. */
+	int opmode;
+
 #ifdef CONFIG_MUIC_HV_FORCE_LIMIT
 	int hv_sel;
 	int silent_chg_change_state;
@@ -343,6 +352,10 @@ struct muic_platform_data {
 
 	/* muic set hiccup mode function */
 	int (*muic_set_hiccup_mode_cb)(int on_off);
+
+	/* a12s SM5714 AFC voltage switching callback (additive; the a21s/slsi
+	 * MUIC does not assign or call it). */
+	int (*muic_afc_set_voltage_cb)(int voltage);
 };
 
 #define MUIC_PDATA_VOID_FUNC(func, param) \

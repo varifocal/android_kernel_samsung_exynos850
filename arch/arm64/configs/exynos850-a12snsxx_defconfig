@@ -641,6 +641,26 @@ CONFIG_MUIC_SUPPORT_POWERMETER=y
 CONFIG_MUIC_SYSFS=y
 CONFIG_HV_MUIC_VOLTAGE_CTRL=y
 CONFIG_MUIC_SUPPORT_PRSWAP=y
+# a12s USB attach path: stock SM5714 MUIC + SM5714 Type-C/PD
+# (stock_config: CONFIG_MUIC_SM5714=y, CONFIG_PDIC_SM5714=y)
+#
+# LEFT OFF for Gate B - the port compiles but does not LINK yet.
+# The drivers, Kconfig and wiring are all in-tree (see Gate B report
+# gate_report_phase4c.md section B4); what is missing is two globals that the
+# SM5714 code declares extern in include/linux/muic/sm/sm5714/sm5714-muic.h:332,334
+#   extern struct device *switch_device;            (Samsung defines it in
+#                                                   drivers/muic/common/muic_notifier.c:22)
+#   extern struct muic_platform_data muic_pdata;
+# whose definitions live in a *different generation* of the common MUIC code
+# than this tree ships (Samsung: muic-core.c; ours: muic_core.c). 3 attempts
+# were spent on this class of header/struct generation mismatches and the
+# time-box is reached, so this is the documented fallback: leave it off and
+# report the risk rather than force it through.
+#
+# Consequence of leaving it off: see gate_report_phase4c.md, "USB-device-mode
+# risk". Re-enable BOTH symbols once the two globals are reconciled.
+#CONFIG_MUIC_SM5714 is not set
+#CONFIG_PDIC_SM5714 is not set
 
 CONFIG_SEC_STI=y
 CONFIG_SENSORS_FINGERPRINT=y

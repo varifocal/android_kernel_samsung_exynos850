@@ -260,4 +260,6 @@ source "drivers/battery/common/Kconfig" # ADDED BY LEGO AUTOMATICALLY: DO NOT SU
 source "drivers/mfd/sm/sm5714/Kconfig" # a12s PMIC (SM5714) MFD core
 source "drivers/battery/charger/sm5714_charger/Kconfig" # a12s charger
 source "drivers/battery/fuelgauge/sm5714_fuelgauge/Kconfig" # a12s fuel gauge
+source "drivers/muic/sm/sm5714/Kconfig" # a12s USB switch (SM5714 MUIC)
+source "drivers/usb/typec/sm/sm5714/Kconfig" # a12s Type-C / PD controller (SM5714)
 endmenu

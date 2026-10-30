@@ -229,3 +229,5 @@ obj-y += battery/common/ # ADDED BY LEGO AUTOMATICALLY: DO NOT SUBMIT
 obj-y += mfd/sm/sm5714/ # a12s PMIC (SM5714) MFD core
 obj-y += battery/charger/sm5714_charger/ # a12s charger
 obj-y += battery/fuelgauge/sm5714_fuelgauge/ # a12s fuel gauge
+obj-y += muic/sm/sm5714/ # a12s USB switch (SM5714 MUIC)
+obj-y += usb/typec/sm/sm5714/ # a12s Type-C / PD controller (SM5714)

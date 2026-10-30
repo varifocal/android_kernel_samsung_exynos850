@@ -57,6 +57,12 @@ enum otg_notify_events {
 	NOTIFY_EVENT_USBD_UNCONFIGURED,
 	NOTIFY_EVENT_USBD_CONFIGURED,
 	NOTIFY_EVENT_VBUSPOWER,
+	/* a12s SM5714 Type-C: DR-data-role-swap event, present in the Samsung
+	 * release's usb_notify.h but absent here. Adding it shifts
+	 * NOTIFY_EVENT_VIRTUAL by one, which is consistent for every user in
+	 * this kernel (both VIRT_EVENT/PHY_EVENT macros and all producers are
+	 * recompiled from this same header). */
+	NOTIFY_EVENT_DR_SWAP,
 	NOTIFY_EVENT_VIRTUAL,
 };
 
