@@ -55,7 +55,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential bc bison flex libssl-dev libelf-dev \
-            ccache lz4 zip python3
+            ccache lz4 zip python3 clang lld llvm
 
       - name: ccache
         uses: actions/cache@v4
