@@ -1,0 +1,101 @@
+name: rom-attempt
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  rom:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - name: Disk start
+        run: df -h / && echo FREE_GB=$(( $(df -Pk / | awk 'NR==2{print $4}') / 1024 / 1024 ))
+
+      - name: toolchain bits
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq openjdk-17-jdk git-core curl python3 \
+            build-essential bc bison flex libssl-dev libelf-dev ccache \
+            rsync schedtool zip unzip pngcrush imagemagick lzop xsltproc
+          mkdir -p "$HOME/bin"
+          curl -fsSL https://storage.googleapis.com/git-repo-downloads/repo > "$HOME/bin/repo"
+          chmod +x "$HOME/bin/repo"
+          echo "$HOME/bin" >> "$GITHUB_PATH"
+          java -version
+
+      - name: repo init + local manifest
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/aosp"
+          cd "$GITHUB_WORKSPACE/aosp"
+          repo init -u https://github.com/LineageOS/android.git -b lineage-23.2 \
+            --depth=1 --no-clone-bundle -g default,-darwin 2>&1 | tail -15
+          mkdir -p .repo/local_manifests
+          # our a12s.xml from this repo (checkout of a16-ci already at workspace root)
+          cp "$GITHUB_WORKSPACE/manifests/a12s.xml" .repo/local_manifests/a12s.xml
+          echo "local manifest installed:"
+          cat .repo/local_manifests/a12s.xml | head -20
+
+      - name: repo sync (best effort until disk full)
+        run: |
+          cd "$GITHUB_WORKSPACE/aosp"
+          # current-only, shallow, no tags — as lean as repo allows
+          set +e
+          repo sync -c -j4 --no-tags --no-clone-bundle --fail-fast=false 2>&1 | tee "$GITHUB_WORKSPACE/sync.log" | tail -50
+          SYNC_RC=${PIPESTATUS[0]}
+          set -e
+          echo "sync exit=$SYNC_RC"
+          df -h /
+          echo FREE_GB=$(( $(df -Pk / | awk 'NR==2{print $4}') / 1024 / 1024 ))
+          du -sh "$GITHUB_WORKSPACE/aosp" 2>/dev/null || true
+          # how many projects made it
+          find "$GITHUB_WORKSPACE/aosp" -name .git -type d 2>/dev/null | wc -l | xargs echo git_dirs:
+
+      - name: breakfast a12s (if envsetup exists)
+        run: |
+          cd "$GITHUB_WORKSPACE/aosp"
+          if [[ ! -f build/envsetup.sh ]]; then
+            echo "no build/envsetup.sh — sync incomplete"
+            exit 1
+          fi
+          source build/envsetup.sh
+          # lunch combo may differ; try a21s first as control, then a12s
+          set +e
+          breakfast a12s userdebug 2>&1 | tee "$GITHUB_WORKSPACE/breakfast.log"
+          BR_RC=${PIPESTATUS[0]}
+          set -e
+          echo "breakfast a12s rc=$BR_RC"
+          if (( BR_RC != 0 )); then
+            breakfast a21s userdebug 2>&1 | tee -a "$GITHUB_WORKSPACE/breakfast.log" || true
+          fi
+          df -h /
+
+      - name: m bacon attempt
+        run: |
+          cd "$GITHUB_WORKSPACE/aosp"
+          source build/envsetup.sh
+          # whatever product breakfast selected
+          set +e
+          m bacon -j4 2>&1 | tee "$GITHUB_WORKSPACE/bacon.log" | tail -80
+          RC=${PIPESTATUS[0]}
+          set -e
+          echo "bacon rc=$RC"
+          df -h /
+          find out/target/product -name 'lineage-*.zip' 2>/dev/null || true
+          # always surface the verdict
+          if (( RC == 0 )); then
+            echo "ROM BUILD SUCCESS"
+          else
+            echo "ROM BUILD FAILED rc=$RC — see bacon.log / disk above"
+          fi
+          exit 0
+
+      - name: upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rom-attempt-logs
+          path: |
+            sync.log
+            breakfast.log
+            bacon.log
+          if-no-files-found: warn
