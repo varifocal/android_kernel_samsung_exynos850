@@ -14,7 +14,9 @@ jobs:
           ref: a16-ci
 
       - name: Disk start
-        run: df -h / && echo FREE_GB=$(( $(df -Pk / | awk 'NR==2{print $4}') / 1024 / 1024 ))
+        run: |
+          df -h /
+          echo FREE_GB=$(( $(df -Pk / | awk 'NR==2{print $4}') / 1024 / 1024 ))
           ls -la manifests/ || true
 
       - name: toolchain bits
@@ -46,7 +48,7 @@ jobs:
           cd "$GITHUB_WORKSPACE/aosp"
           # current-only, shallow, no tags — as lean as repo allows
           set +e
-          repo sync -c -j4 --no-tags --no-clone-bundle --fail-fast=false 2>&1 | tee "$GITHUB_WORKSPACE/sync.log" | tail -50
+          repo sync -c -j4 --no-tags --no-clone-bundle 2>&1 | tee "$GITHUB_WORKSPACE/sync.log" | tail -50
           SYNC_RC=${PIPESTATUS[0]}
           set -e
           echo "sync exit=$SYNC_RC"
