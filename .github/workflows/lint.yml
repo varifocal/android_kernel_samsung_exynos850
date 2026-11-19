@@ -1,0 +1,28 @@
+name: lint
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - a16-ci
+      - a16-kernel
+permissions:
+  contents: read
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+      - name: shellcheck tools
+        run: |
+          if [ -d tools ]; then
+            find tools -name '*.sh' -print0 | xargs -0 -r shellcheck -x || true
+          fi
+      - name: python compile
+        run: |
+          if [ -d tests ]; then
+            find tests -name '*.py' -print0 | xargs -0 -r python3 -m py_compile
+          fi
+      - name: workflow forbidden triggers
+        run: python3 tests/workflow_lint.py || true
