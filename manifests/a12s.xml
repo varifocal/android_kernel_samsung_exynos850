@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest>
+
+  <!-- LineageOS official (hardware/*, slsi sepolicy, kernel reference) -->
+  <remote  name="lineage"
+           fetch="https://github.com/LineageOS"
+           revision="lineage-23.2" />
+
+  <!-- varifocal public repos (device + our kernel work branch) -->
+  <remote  name="varifocal"
+           fetch="https://github.com/varifocal"
+           revision="lineage-23.2" />
+
+  <!-- Device (self-contained a12s tree; does NOT use a21s-common) -->
+  <project name="android_device_samsung_a12s" path="device/samsung/a12s" remote="varifocal" revision="lineage-23.2" />
+
+  <!-- Vendor blobs: prefer android_vendor_samsung_a12s (23.2 extract).
+       Fallback note: android_vendor_samsung is lineage-21 layout with a12s/ subdir. -->
+  <project name="android_vendor_samsung_a12s" path="vendor/samsung/a12s" remote="varifocal" revision="lineage-23.2" />
+
+  <!-- Kernel: our work branch (created from android-14.0; will import LineageOS 4.19.325 work) -->
+  <project name="android_kernel_samsung_exynos850" path="kernel/samsung/exynos850" remote="varifocal" revision="a16-kernel" />
+
+  <!-- SLSI / hardware (official LineageOS — same as a21s lineage.dependencies) -->
+  <project name="android_device_samsung_slsi_sepolicy" path="device/samsung_slsi/sepolicy" remote="lineage" />
+  <project name="android_hardware_samsung" path="hardware/samsung" remote="lineage" />
+  <project name="android_hardware_samsung_slsi_libbt" path="hardware/samsung_slsi/libbt" remote="lineage" />
+  <project name="android_hardware_samsung_slsi_nfc" path="hardware/samsung_slsi/nfc" remote="lineage" />
+  <project name="android_hardware_samsung_slsi_scsc_wifibt_wifi_hal" path="hardware/samsung_slsi/scsc_wifibt/wifi_hal" remote="lineage" />
+  <project name="android_hardware_samsung_slsi_scsc_wifibt_wpa_supplicant_lib" path="hardware/samsung_slsi/scsc_wifibt/wpa_supplicant_lib" remote="lineage" />
+  <project name="android_hardware_samsung_slsi-linaro_config" path="hardware/samsung_slsi-linaro/config" remote="lineage" />
+  <project name="android_hardware_samsung_slsi-linaro_exynos" path="hardware/samsung_slsi-linaro/exynos" remote="lineage" />
+  <project name="android_hardware_samsung_slsi-linaro_exynos5" path="hardware/samsung_slsi-linaro/exynos5" remote="lineage" />
+  <project name="android_hardware_samsung_slsi-linaro_graphics" path="hardware/samsung_slsi-linaro/graphics" remote="lineage" />
+  <project name="android_hardware_samsung_slsi-linaro_interfaces" path="hardware/samsung_slsi-linaro/interfaces" remote="lineage" />
+  <project name="android_hardware_samsung_slsi-linaro_openmax" path="hardware/samsung_slsi-linaro/openmax" remote="lineage" />
+
+</manifest>
