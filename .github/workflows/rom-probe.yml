@@ -1,0 +1,59 @@
+name: rom-probe
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Disk reality check
+        run: |
+          df -h
+          echo "---"
+          df -BG | awk 'NR==1 || /\/$|\/mnt|\/home|\/runner/'
+          # how much free on the root the runner uses
+          FREE=$(df -Pk / | awk 'NR==2{print $4}')
+          echo "FREE_KB=$FREE FREE_GB=$((FREE/1024/1024))"
+      - name: Install repo
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq git-core curl python3
+          mkdir -p "$HOME/bin"
+          curl -fsSL https://storage.googleapis.com/git-repo-downloads/repo > "$HOME/bin/repo"
+          chmod +x "$HOME/bin/repo"
+          echo "$HOME/bin" >> "$GITHUB_PATH"
+      - name: LineageOS repo init (shallow)
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/aosp"
+          cd "$GITHUB_WORKSPACE/aosp"
+          repo init -u https://github.com/LineageOS/android.git -b lineage-23.2 --depth=1 --no-clone-bundle 2>&1 | tail -20
+          df -h /
+      - name: repo sync (may OOM/disk-fail — that's the point)
+        run: |
+          cd "$GITHUB_WORKSPACE/aosp"
+          # sync only a few small projects first to measure rate, then attempt more
+          repo sync -c -j2 --no-tags --no-clone-bundle --fail-fast \
+            platform/build platform/manifest 2>&1 | tail -30
+          echo "--- after small sync ---"
+          df -h /
+          FREE=$(df -Pk / | awk 'NR==2{print $4}')
+          echo "FREE_GB=$((FREE/1024/1024))"
+          # try a bigger chunk
+          repo sync -c -j2 --no-tags --no-clone-bundle \
+            hardware/samsung hardware/samsung_slsi-linaro/config 2>&1 | tail -20 || true
+          df -h /
+          FREE=$(df -Pk / | awk 'NR==2{print $4}')
+          echo "FREE_GB_after_hw=$((FREE/1024/1024))"
+          # expected full tree ~150GB+ — prove we can't
+          echo "Hosted runner free was ~$((FREE/1024/1024))GB at end; full lineage sync needs 150GB+ source + out/"
+      - name: Verdict
+        run: |
+          FREE=$(df -Pk / | awk 'NR==2{print $4}')
+          GB=$((FREE/1024/1024))
+          echo "Remaining free: ${GB}GB"
+          if (( GB < 50 )); then
+            echo "Hosted runner cannot complete a full ROM build (expected)."
+          fi
+          echo "Full ROM requires ~400GB disk — use Buildkite agent with big volume, not GH-hosted."
