@@ -8,8 +8,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 360
     steps:
+      - name: Checkout a16-ci
+        uses: actions/checkout@v4
+        with:
+          ref: a16-ci
+
       - name: Disk start
         run: df -h / && echo FREE_GB=$(( $(df -Pk / | awk 'NR==2{print $4}') / 1024 / 1024 ))
+          ls -la manifests/ || true
 
       - name: toolchain bits
         run: |
