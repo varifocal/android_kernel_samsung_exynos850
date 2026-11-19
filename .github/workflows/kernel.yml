@@ -81,6 +81,7 @@ jobs:
             CROSS_COMPILE=aarch64-linux-gnu- \
             -j"$(nproc)" Image 2>&1 | tee "$GITHUB_WORKSPACE/build.log"
           sha256sum "$GITHUB_WORKSPACE/out/arch/arm64/boot/Image"
+          cp "$GITHUB_WORKSPACE/out/.config" "$GITHUB_WORKSPACE/kernel.config"
 
       - name: Upload artifacts
         if: always()
@@ -90,5 +91,7 @@ jobs:
           path: |
             out/arch/arm64/boot/Image
             out/.config
+            kernel.config
             build.log
           if-no-files-found: warn
+          include-hidden-files: true
