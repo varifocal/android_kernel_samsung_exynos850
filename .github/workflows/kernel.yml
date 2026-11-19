@@ -1,0 +1,94 @@
+name: kernel
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "kernel branch or sha to build"
+        required: false
+        default: "a16-kernel"
+      defconfig:
+        description: "defconfig name"
+        required: false
+        default: "exynos850-a12snsxx_defconfig"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Checkout CI branch (for scripts)
+        uses: actions/checkout@v4
+        with:
+          ref: a16-ci
+
+      - name: Checkout kernel
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ inputs.ref || 'a16-kernel' }}
+          path: kernel
+          fetch-depth: 1
+
+      - name: Show what we built
+        run: |
+          echo "repo=${{ github.repository }}"
+          echo "ref=${{ inputs.ref || 'a16-kernel' }}"
+          echo "defconfig=${{ inputs.defconfig || 'exynos850-a12snsxx_defconfig' }}"
+          git -C kernel rev-parse HEAD
+          git -C kernel log -1 --oneline
+          head -5 kernel/Makefile
+          # refuse anything that looks like root code
+          if [ -d kernel/KernelSU ] || ls kernel/arch/arm64/configs/*ksu* 2>/dev/null; then
+            echo "root code marker found" >&2
+            exit 1
+          fi
+          if grep -rE '^CONFIG_KSU=y|^CONFIG_KPM=y' kernel/arch/arm64/configs/ 2>/dev/null; then
+            echo "KSU/KPM in defconfig" >&2
+            exit 1
+          fi
+
+      - name: Install build deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential bc bison flex libssl-dev libelf-dev \
+            ccache lz4 zip python3
+
+      - name: ccache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ccache
+          key: kcache-${{ inputs.ref || 'a16-kernel' }}-${{ hashFiles('kernel/arch/arm64/configs/**') }}
+          restore-keys: kcache-
+
+      - name: Configure
+        working-directory: kernel
+        env:
+          DEFCONFIG: ${{ inputs.defconfig || 'exynos850-a12snsxx_defconfig' }}
+        run: |
+          mkdir -p ../out
+          make O="$GITHUB_WORKSPACE/out" ARCH=arm64 "$DEFCONFIG"
+          make O="$GITHUB_WORKSPACE/out" ARCH=arm64 olddefconfig
+          python3 "$GITHUB_WORKSPACE/tools/check_config.py" "$GITHUB_WORKSPACE/out/.config"
+
+      - name: Build Image
+        working-directory: kernel
+        run: |
+          make O="$GITHUB_WORKSPACE/out" ARCH=arm64 CC=clang LLVM=1 LLVM_IAS=1 \
+            CROSS_COMPILE=aarch64-linux-gnu- \
+            -j"$(nproc)" Image 2>&1 | tee "$GITHUB_WORKSPACE/build.log"
+          sha256sum "$GITHUB_WORKSPACE/out/arch/arm64/boot/Image"
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kernel-${{ inputs.ref || 'a16-kernel' }}
+          path: |
+            out/arch/arm64/boot/Image
+            out/.config
+            build.log
+          if-no-files-found: warn
