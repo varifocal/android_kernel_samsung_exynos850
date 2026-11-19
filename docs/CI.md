@@ -32,3 +32,27 @@ Repo setting to change by hand: Settings → Actions → General →
 
 ## Runner host
 See `host/` for setup scripts (swap, packages, runner service). Untested.
+
+## Buildkite (primary for Linux builds)
+
+Pipeline: `.buildkite/pipeline.yml`  
+Agent: Linux, 8 vCPU, 32 GB RAM, ~100 GB disk + cache volume (`/srv/ccache`, `/srv/kout`).  
+Queue tag: `queue=linux`. Setup: `host/buildkite_agent.md`.
+
+| Step | Command | Disk needed |
+|------|---------|-------------|
+| lint | `tests/run_lint.sh` | tiny |
+| kernel | `.buildkite/build_kernel.sh` | ~5 GB |
+| rom | `.buildkite/build_rom.sh` | **400 GB+ — disabled by default** |
+
+GitHub Actions (`lint.yml`, `kernel.yml`) stay as a fallback / quick check.
+The Buildkite kernel job uses the same config gate and refuses root configs.
+
+### Why not ROM on 100 GB
+Full LineageOS sync+build ≈ 250–350 GB. `build_rom.sh` exits early unless
+`/srv/aosp` has ≥400 GB free and `BUILD_DISABLED` is unset.
+
+### GitHub + Buildkite
+Buildkite connects to GitHub directly (pipeline in-repo). GitHub Actions
+remains for hosted lint if Buildkite is down. Do not use `pull_request`
+triggers on either for self-hosted/agent execution.

@@ -1,0 +1,36 @@
+# Buildkite — Linux agent: 8 vCPU, 32 GB RAM, ~100 GB root + cache volume
+# Queue name the agent must register with: linux
+# Expected mounts on the agent host:
+#   /srv/ccache  — persistent ccache (cache volume)
+#   /srv/kout    — persistent kernel out dir (optional, speeds rebuilds)
+#   /srv/aosp    — ROM tree; ROM step stays disabled until this has 400 GB+
+
+steps:
+  - label: ":penguin: lint + config gate"
+    key: lint
+    command: bash tests/run_lint.sh
+    agents:
+      queue: linux
+    timeout_in_minutes: 15
+
+  - label: ":kernel: a12s Image"
+    key: kernel
+    command: bash .buildkite/build_kernel.sh
+    agents:
+      queue: linux
+    timeout_in_minutes: 60
+    artifact_paths:
+      - "kout/arch/arm64/boot/Image"
+      - "kout/.config"
+      - "kernel-build.log"
+
+  - label: ":android: ROM (disabled — needs 400GB+ volume)"
+    key: rom
+    command: bash .buildkite/build_rom.sh
+    agents:
+      queue: linux
+    timeout_in_minutes: 360
+    env:
+      BUILD_DISABLED: "1"
+    artifact_paths:
+      - "aosp/out/target/product/*/lineage-*.zip"
