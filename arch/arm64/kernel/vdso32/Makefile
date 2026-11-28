@@ -10,7 +10,7 @@ include $(srctree)/lib/vdso/Makefile
 
 # Same as cc-*option, but using CC_COMPAT instead of CC
 ifeq ($(CONFIG_CC_IS_CLANG), y)
-CC_COMPAT_CLANG_FLAGS := --target=$(notdir $(CROSS_COMPILE_COMPAT:%-=%))
+CC_COMPAT_CLANG_FLAGS := --target=arm-linux-androideabi
 
 CC_COMPAT ?= $(CC)
 CC_COMPAT += $(CC_COMPAT_CLANG_FLAGS)
@@ -48,7 +48,7 @@ VDSO_CPPFLAGS += $(LINUXINCLUDE)
 # From top-level Makefile
 VDSO_CAFLAGS := $(VDSO_CPPFLAGS)
 ifneq ($(shell $(CC_COMPAT) --version 2>&1 | head -n 1 | grep clang),)
-VDSO_CAFLAGS += --target=$(notdir $(CROSS_COMPILE_COMPAT:%-=%))
+VDSO_CAFLAGS += --target=arm-linux-androideabi
 endif
 
 VDSO_CAFLAGS += $(call cc32-option,-fno-PIE)
